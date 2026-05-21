@@ -42,6 +42,8 @@ The Project Manager is the hub and it runs autonomously. It reads the backlog, u
 
 The PM also maximizes parallelism — when two tasks have no dependency on each other, it runs them at the same time. It never writes code itself. It never pauses for permission. Its job is to keep the pipeline moving. You watch it work; it notifies you at milestones and when things go wrong.
 
+The PM is also the single point of contact for any question raised mid-pipeline. When a subagent needs clarification, it reports the question to the PM, which walks a defined escalation chain (see [The Question Escalation Chain](#the-question-escalation-chain) below) and only surfaces a question to you when no project document can answer it.
+
 ### Agent 4 — Coding Agent
 
 The Coding Agent receives one task at a time and builds exactly what the acceptance criteria specify — nothing more, nothing less. Before reporting completion, it runs a self-check against every criterion to catch obvious issues before the work hits review.
@@ -142,6 +144,29 @@ The agents execute in a specific order. The Project Manager runs the pipeline au
 - After 3 failed reviews, a task is marked `BLOCKED` — the PM keeps working on other tasks
 - Every piece of code still passes through two independent review gates before it is committed
 - The PM notifies you at phase completions and pipeline end — you watch, you don't gate
+- Subagents never ask you questions directly — they route every question through the PM (see below)
+
+---
+
+## The Question Escalation Chain
+
+In v1.1 the kit gained a strict communication discipline: **only two agents are allowed to speak to you directly.** Everything else flows through the Project Manager.
+
+- **IT Solution Architect** talks to you during discovery. That conversation is the source of truth for the whole project, so it stays direct. Once the Architect hands off `docs/project-plan.md`, its job is done and the line closes.
+- **Project Manager** is your single point of contact for the rest of the pipeline. Every other agent reports to it.
+
+When a subagent (Coding, Code Review, Security Review, CI/CD, Requirements, Project Summary) needs clarification — e.g. the Security Review Agent wants to know the deployment target, or the Coding Agent finds an ambiguous acceptance criterion — it does **not** prompt you. It reports the question back to the PM with context specific to its role.
+
+The PM then walks a 4-step resolution chain:
+
+1. **Check `docs/project-plan.md`** — does the Architect's blueprint already answer this?
+2. **Check `CLAUDE.md`** — is it covered by project conventions?
+3. **Check the task file** — does the acceptance criteria or task context resolve it?
+4. **Escalate to you** — only if none of the above cover the question.
+
+Either way, every Q&A is logged in `docs/task-log.md` in a dedicated format, so you can see what was asked, where the answer came from, and how it got resolved without scrubbing through agent output.
+
+The net effect: fewer interruptions, every answer grounded in the project's own documents, and a complete written trail of every decision.
 
 ---
 
@@ -211,6 +236,7 @@ agent-pipeline-kit/
 ├── CLAUDE.md                            # Template — fill in per project
 ├── QUICKSTART.md                        # Detailed setup and usage guide
 ├── CHANGELOG.md                         # Version history
+├── watch-pipeline.sh                    # Tail task-log/reviews in a second terminal
 ├── .gitignore
 └── README.md                            # This file
 ```
