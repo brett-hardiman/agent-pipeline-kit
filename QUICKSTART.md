@@ -1,6 +1,6 @@
 # Agent Pipeline Kit — Quick Start
 
-A portable 8-agent Claude Code pipeline for any software project. Drop this kit into a new repo, fill in `CLAUDE.md`, and point the IT Solution Architect at what you want to build.
+A portable 8-agent Claude Code pipeline for any software project. Drop this kit into a new repo, fill in `CLAUDE.md`, and point the IT Solution Architect at what you want to build. The Project Manager runs autonomously — no handoff approvals needed.
 
 ---
 
@@ -10,19 +10,19 @@ A portable 8-agent Claude Code pipeline for any software project. Drop this kit 
 agent-pipeline-kit/
 ├── .claude/
 │   └── agents/
-│       ├── project-manager.md         # Orchestrator — coordinates all agents
+│       ├── project-manager.md         # Autonomous orchestrator
 │       ├── it-solution-architect.md   # Discovery & architecture planning
 │       ├── requirements-agent.md      # Backlog decomposition & task files
 │       ├── coding-agent.md            # Implementation
-│       ├── code-review-agent.md       # AC verification & standards compliance
-│       ├── security-review-agent.md   # Security audit & deployment readiness
-│       ├── cicd-integration-agent.md  # Git branching, commits, PRs
-│       └── project-summary-agent.md  # README generation
+│       ├── code-review-agent.md       # Quality gate
+│       ├── security-review-agent.md   # Security gate
+│       ├── cicd-integration-agent.md  # Git operations
+│       └── project-summary-agent.md   # README generation
 ├── docs/
 │   ├── backlog/                       # Requirements Agent outputs here
 │   ├── reviews/                       # Code Review Agent outputs here
 │   ├── security-reviews/              # Security Review Agent outputs here
-│   └── task-log.md                    # Project Manager tracks state here
+│   └── task-log.md                    # PM tracks state + routing decisions
 ├── CLAUDE.md                          # ← Fill this in before starting
 ├── .gitignore
 └── QUICKSTART.md                      # This file
@@ -102,38 +102,116 @@ any hard constraints on tech stack or deployment, and what success looks like.]
 
 The Architect will ask you questions. Answer them. Push back if it suggests something wrong — it will push back on you too if your ideas have problems. This conversation is the most valuable part of the process.
 
-### Step 2 — Automatic handoff
+### Step 2 — The PM takes over
 
-Once the Architect saves `docs/project-plan.md`, it reports to the Project Manager, who spawns the Requirements Agent. You do not need to do anything.
+Once the Architect saves `docs/project-plan.md`, it reports to the Project Manager. The PM spawns the Requirements Agent, receives the backlog, and **immediately begins delegating tasks to agents**. No approval checkpoint — the PM runs the pipeline autonomously.
 
-### Step 3 — Backlog review checkpoint
+The PM makes all routing decisions:
+- Completed task → routes through Code Review → Security Review → CI/CD
+- Rejected task → sends back to Coding Agent with findings, or marks `BLOCKED` and moves on
+- All dependencies cleared → assigns next task immediately
+- All tasks done → runs Project Summary Agent
 
-The Project Manager pauses and asks you to review the backlog before coding begins. Open `docs/backlog/index.md` and check:
-- Are all the right tasks there?
-- Are any tasks missing?
-- Does the dependency order make sense?
+### Step 3 — Watch it build
 
-This is your highest-leverage moment. Catching scope issues here costs minutes. Catching them in code review costs hours.
+Open `docs/task-log.md` to see every state transition and routing decision the PM makes. You get notified at phase completions and pipeline end, but the PM does not pause for your approval.
 
-Approve when ready: `"Backlog looks good, proceed with coding."`
+**To see each agent working in real-time, use the multi-terminal layout** described below.
 
-### Step 4 — Watch it build
+### Step 4 — README generation
 
-The Project Manager assigns tasks to the Coding Agent. Each completed task flows through:
+Happens automatically. When all tasks reach `DONE`, the PM spawns the Project Summary Agent to generate the final README. No manual trigger needed.
 
+---
+
+## Watching the Agents Work (Multi-Terminal Layout)
+
+The pipeline is designed so you can see what every agent is doing in real-time. Each agent runs in its own Claude Code session visible in a separate terminal pane.
+
+### Option A — tmux (recommended)
+
+tmux lets you split one terminal into multiple panes, each showing a different agent's activity.
+
+**Setup script — save as `watch-pipeline.sh` in your project root:**
+
+```bash
+#!/bin/bash
+# watch-pipeline.sh — Multi-pane agent pipeline monitor
+# Usage: ./watch-pipeline.sh
+
+SESSION="agent-pipeline"
+
+# Kill existing session if it exists
+tmux kill-session -t $SESSION 2>/dev/null
+
+# Create session with the PM in the first pane
+tmux new-session -d -s $SESSION -n "pipeline"
+
+# Split into a 2x2 grid + bottom strip
+# Layout:
+#   ┌──────────────┬──────────────┐
+#   │  PM / Arch   │   Coding     │
+#   ├──────────────┼──────────────┤
+#   │  Code Review │  Sec Review  │
+#   ├──────────────┴──────────────┤
+#   │        CI/CD + Logs         │
+#   └─────────────────────────────┘
+
+tmux split-window -h -t $SESSION
+tmux split-window -v -t $SESSION:0.0
+tmux split-window -v -t $SESSION:0.1
+tmux split-window -v -t $SESSION
+
+# Label each pane (shows in status bar)
+tmux select-pane -t $SESSION:0.0 -T "PM / Architect"
+tmux select-pane -t $SESSION:0.1 -T "Code Review"
+tmux select-pane -t $SESSION:0.2 -T "Coding Agent"
+tmux select-pane -t $SESSION:0.3 -T "Security Review"
+tmux select-pane -t $SESSION:0.4 -T "CI/CD + Logs"
+
+# Set bottom pane to tail the task log
+tmux send-keys -t $SESSION:0.4 "watch -n 2 cat docs/task-log.md" Enter
+
+# Set status bar to show pane titles
+tmux set -t $SESSION pane-border-format " #{pane_title} "
+tmux set -t $SESSION pane-border-status top
+
+# Attach
+tmux attach -t $SESSION
 ```
-Coding Agent → Code Review → Security Review → CI/CD Integration → DONE
+
+```bash
+chmod +x watch-pipeline.sh
+./watch-pipeline.sh
 ```
 
-You get milestone updates at the end of each phase. You do not need to manage individual tasks.
+Then launch `claude` in the PM pane and kick off the Architect. As the PM delegates to agents, their activity appears in the Claude Code output of each respective session.
 
-### Step 5 — README generation
+### Option B — iTerm2 Split Panes (macOS)
 
-After all phases complete, ask the Project Manager to run the Project Summary Agent:
+If you use iTerm2:
+1. Open iTerm2
+2. `Cmd+D` to split vertically, `Cmd+Shift+D` to split horizontally
+3. Arrange into a grid — one pane per agent role
+4. Run `claude` in the PM pane to start the pipeline
+5. In the bottom pane, run `watch -n 2 cat docs/task-log.md` to live-tail the log
 
-```
-"All phases are done. Please run the project-summary-agent to generate the README."
-```
+### Option C — VS Code Terminals
+
+1. Open the integrated terminal
+2. Click the split terminal icon (or `Ctrl+Shift+5`) to create multiple panes
+3. Rename each pane (right-click → "Rename") to the agent role
+4. Run `claude` in the PM pane
+5. Dedicate one pane to `watch -n 2 cat docs/task-log.md`
+
+### What You'll See
+
+Each agent logs its activity to stdout as it works. The PM logs routing decisions to `docs/task-log.md`. Between the terminal panes and the live-tailing log, you get full visibility into:
+
+- Which agent is working on which task right now
+- What the PM decided to do with a completed/rejected task
+- Which tasks are running in parallel
+- Where the pipeline is in the overall backlog
 
 ---
 
@@ -168,15 +246,18 @@ The CLAUDE.md in this project already defines the conventions — please
 read it and use it as your architectural starting point.
 ```
 
+The PM will take it from there — no further approvals needed until the pipeline completes.
+
 ---
 
 ## Tips
 
 - **Monitor token usage** — run `/usage` in Claude Code periodically. Agent teams consume tokens across all active agents.
 - **Start with a tight scope** — tell the Architect to limit to 2-3 phases for your first run. You can always add phases.
-- **The backlog checkpoint is real** — do not just say "looks good" without reading it. The Coding Agent implements exactly what the task files say.
-- **Check `docs/task-log.md`** — the Project Manager logs every state transition. If something goes wrong, start here.
 - **CLAUDE.md is the brain** — every agent reads it. The more complete it is, the less agents deviate from your intentions.
+- **Check `docs/task-log.md`** — the PM logs every routing decision. If something goes wrong, start here.
+- **The PM will mark tasks `BLOCKED` after 3 failed reviews** — check blocked tasks and either refine the acceptance criteria or adjust the project plan.
+- **Use the multi-terminal layout** — it is the fastest way to understand what is happening across the pipeline.
 
 ---
 
@@ -198,3 +279,12 @@ read it and use it as your architectural starting point.
 **Agent making wrong decisions?**
 - Almost always a `CLAUDE.md` problem — add more specificity to the relevant section
 - Check that `CLAUDE.md` is in the project root, not a subdirectory
+
+**Task stuck in a loop?**
+- The PM marks tasks `BLOCKED` after 3 review failures — check the finding documents in `docs/reviews/` or `docs/security-reviews/` to understand why
+- Refine the acceptance criteria in the task file, then change the status back to `PENDING` to let the PM pick it up again
+
+**tmux panes not showing agents?**
+- Each agent runs within the PM's Claude Code session as sub-agents — their output streams in the PM pane by default
+- To see individual agent detail, use `docs/task-log.md` live-tail plus the review/security-review output files
+- For maximum visibility, run the pipeline with `--verbose` if supported by your Claude Code version

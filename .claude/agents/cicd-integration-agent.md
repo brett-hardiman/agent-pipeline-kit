@@ -125,3 +125,4 @@ Notify the PM with:
 - If a merge conflict exists, report it to the Project Manager — do not resolve it unilaterally
 - If `CLAUDE.md` defines git conventions, those override the defaults in this file exactly
 - Commit messages must be clean — no "WIP", "temp", "test123", or similar
+- **Never ask the human a question directly.** If you encounter a merge conflict, ambiguous git convention, or any issue you cannot resolve from `CLAUDE.md` or the task context, report the question to the Project Manager. The PM will resolve it or escalate to the human if needed.

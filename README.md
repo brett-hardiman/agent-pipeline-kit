@@ -4,7 +4,7 @@
 [![Agents](https://img.shields.io/badge/Agents-8-7F77DD)](https://github.com/brett-hardiman/agent-pipeline-kit)
 [![License](https://img.shields.io/badge/License-MIT-222222)](LICENSE)
 
-A portable team of 8 AI agents that plan, build, review, and ship software — powered by [Claude Code](https://docs.anthropic.com/en/docs/claude-code).
+A portable team of 8 AI agents that plan, build, review, and ship software autonomously — powered by [Claude Code](https://docs.anthropic.com/en/docs/claude-code). The Project Manager delegates, routes, and decides without waiting for your approval at every step.
 
 **Live site:** [bretthardiman.com](https://bretthardiman.com) — the portfolio site was built entirely by this pipeline.
 
@@ -38,9 +38,9 @@ This is the same process a Business Analyst would follow on a real software team
 
 ### Agent 3 — Project Manager
 
-The Project Manager is the hub. It reads the backlog, understands which tasks depend on other tasks, and coordinates the team. It assigns work to the Coding Agent, routes completed work through review gates, tracks every state transition in a log file, and pauses at key moments to keep you informed.
+The Project Manager is the hub and it runs autonomously. It reads the backlog, understands which tasks depend on other tasks, and coordinates the team without waiting for your approval at each handoff. It assigns work to the Coding Agent, routes completed work through review gates, and makes routing decisions when work comes back — sending it to the next gate, back to the Coding Agent for rework, or marking it blocked in the backlog if there is a deeper problem.
 
-The PM also maximizes parallelism — when two tasks have no dependency on each other, it runs them at the same time. It never writes code itself. Its job is to keep the pipeline moving.
+The PM also maximizes parallelism — when two tasks have no dependency on each other, it runs them at the same time. It never writes code itself. It never pauses for permission. Its job is to keep the pipeline moving. You watch it work; it notifies you at milestones and when things go wrong.
 
 ### Agent 4 — Coding Agent
 
@@ -76,7 +76,7 @@ It writes for two audiences at once: a non-technical person who wants to underst
 
 ## How the Pipeline Flows
 
-The agents execute in a specific order. Some steps happen in sequence (one after the other), and some happen in parallel (at the same time) when tasks don't depend on each other.
+The agents execute in a specific order. The Project Manager runs the pipeline autonomously — delegating tasks, routing completed work, and making backlog decisions without human approval at each step.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
@@ -96,9 +96,12 @@ The agents execute in a specific order. Some steps happen in sequence (one after
 │   └──────────┬───────────┘                                          │
 │              │                                                      │
 │              ▼                                                      │
-│   ┌──────────────────────┐                                          │
-│   │  Project Manager     │  YOU review the backlog and approve      │
-│   └──────────┬───────────┘                                          │
+│   ┌──────────────────────────────────────────────────────────┐      │
+│   │  Project Manager (autonomous)                            │      │
+│   │                                                          │      │
+│   │  Owns the backlog. Delegates. Routes. Decides.           │      │
+│   │  No human approval needed per handoff.                   │      │
+│   └──────────┬───────────────────────────────────────────────┘      │
 │              │                                                      │
 │    ┌─────────┴─────────┐     (parallel when no dependencies)        │
 │    ▼                   ▼                                            │
@@ -108,25 +111,25 @@ The agents execute in a specific order. Some steps happen in sequence (one after
 │   └───┬────┘   └───┬────┘       Coding Agent                       │
 │       │            │                 │                              │
 │       ▼            ▼                 ▼                              │
-│   ┌────────────────────┐        Code Review                        │
-│   │  Code Review Agent │             │                              │
-│   └──────────┬─────────┘             ▼                              │
-│              │                  Security Review                     │
-│              ▼                       │                              │
-│   ┌────────────────────┐             ▼                              │
-│   │  Security Review   │        CI/CD Integration                   │
-│   │  Agent             │             │                              │
-│   └──────────┬─────────┘             ▼                              │
-│              │                     DONE                             │
-│              ▼                                                      │
+│   ┌────────────────────┐        Code Review ──┐                    │
+│   │  Code Review Agent │             │        │ REJECTED →         │
+│   └──────────┬─────────┘             ▼        │ back to PM →       │
+│              │                  Security ──────┤ rework or          │
+│              ▼                  Review   │     │ backlog            │
+│   ┌────────────────────┐             ▼  │     │                    │
+│   │  Security Review   │        CI/CD ──┘                          │
+│   │  Agent             │        Integration                        │
+│   └──────────┬─────────┘             │                              │
+│              │                       ▼                              │
+│              ▼                     DONE → PM assigns next task      │
 │   ┌────────────────────┐                                            │
 │   │  CI/CD Integration │  Branches, commits, opens pull request     │
 │   │  Agent             │                                            │
 │   └──────────┬─────────┘                                            │
 │              │                                                      │
-│              ▼                                                      │
+│              ▼  (when ALL tasks are DONE)                           │
 │   ┌──────────────────────┐                                          │
-│   │  Project Summary     │  Writes the final README                 │
+│   │  Project Summary     │  Writes the final README (auto-triggered)│
 │   │  Agent               │                                          │
 │   └──────────────────────┘                                          │
 │                                                                     │
@@ -134,10 +137,11 @@ The agents execute in a specific order. Some steps happen in sequence (one after
 ```
 
 **Key points:**
-- Nothing gets built until you approve the backlog
-- Every piece of code passes through two independent review gates before it is committed
-- The Project Manager pauses and notifies you at the end of each phase — you are never out of the loop
-- If any review rejects a task, it loops back to the Coding Agent automatically
+- The PM runs autonomously — it delegates, routes, and decides without pausing for your approval
+- Rejected work goes back to the PM, which decides: rework (send back to Coding Agent) or backlog (mark blocked, move on)
+- After 3 failed reviews, a task is marked `BLOCKED` — the PM keeps working on other tasks
+- Every piece of code still passes through two independent review gates before it is committed
+- The PM notifies you at phase completions and pipeline end — you watch, you don't gate
 
 ---
 
