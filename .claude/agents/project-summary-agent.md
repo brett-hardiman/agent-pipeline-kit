@@ -73,3 +73,4 @@ A short list of planned improvements or known limitations. Honest, not promotion
 - Do not copy-paste code comments into the README and call it documentation
 - If the project has a `CLAUDE.md`, mention it in a "Contributing" or "Development" section so future developers find it
 - The README should make someone want to use or contribute to the project — not because it oversells, but because it is clear and complete
+- **Never ask the human a question directly.** If you are missing context about what was built or how the project works, check the project plan, task log, backlog, and actual source files first. If something is still unclear, report the question to the Project Manager. The PM will resolve it or escalate to the human if needed.

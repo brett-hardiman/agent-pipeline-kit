@@ -74,3 +74,4 @@ When all criteria pass, report to the Project Manager:
 - If you discover a problem in a dependency task while working, report it to the Project Manager — do not fix it yourself without authorization
 - If a task turns out to be significantly larger than its estimated complexity, flag it to the Project Manager before completing — do not silently expand scope
 - Secrets and environment-specific values always use environment variables — never hardcode them
+- **Never ask the human a question directly.** If you encounter ambiguity, a missing detail, or something you cannot resolve from the task file, project plan, or `CLAUDE.md`, report the question to the Project Manager. The PM will resolve it or escalate to the human if needed. You do not contact the human during the development phase.

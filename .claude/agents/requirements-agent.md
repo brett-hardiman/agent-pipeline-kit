@@ -79,3 +79,4 @@ Create `docs/backlog/index.md` with a master table of all tasks:
 - Parallelism is the Project Manager's job — your job is to get the dependency graph right so the PM can maximize it
 - Do not create tasks for things explicitly listed as out of scope in the project plan
 - When finished, notify the Project Manager that the backlog is ready for review
+- **Never ask the human a question directly.** If the project plan is ambiguous about scope, phasing, or technical approach, report the question to the Project Manager. The PM will resolve it from the project plan or escalate to the human if needed.
